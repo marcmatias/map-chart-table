@@ -1,3 +1,5 @@
+import { statesAcronym }  from "./data.js";
+import { selectElement } from "./utils";
 import './assets/css/style.css'
 import Chart from "chart.js/auto";
 import TableActions from "table-actions";
@@ -5,19 +7,57 @@ import TableActions from "table-actions";
 import MapChart from "./map-chart";
 
 export default class MapChartTable {
-  constructor(element) {
+
+  constructor(element, data) {
     this.element = element;
+    this.data = this.formatedData(data);
+    this.statesAcronym = statesAcronym;
   }
 
   async init() {
     const self = this;
     self.render();
 
-    const mapChart = new MapChart(this.element.querySelector(".map__canva-section"));
+    const states = [];
+    for (const [, value] of Object.entries(statesAcronym)){
+      states.push(value.acronym)
+    }
+    self.states = states;
+    self.currentState = states[0];
+
+    const sicks = [ ...new Set( self.data.map(row => row[0]) ) ];
+    sicks.shift()
+    self.sicks = sicks;
+    self.currentSick = self.sicks[0];
+
+    const years = [ ...new Set( self.data.map(row => row[1]) ) ];
+    years.shift()
+    self.years = years;
+
+    const mapChart =
+      new MapChart(
+        this.element.querySelector(".map__canva-section"),
+        self.data,
+        self.sicks,
+        self.years,
+        self.statesAcronym
+      );
     await mapChart.init();
   }
 
-  render () {
+  formatedData(data) {
+    return data
+      .trim()
+      .split('\n')
+      .map(row =>
+        row.split(',').filter(
+          // if not Empty add to results
+          value => !['', null, undefined].includes(value)
+        )
+      );
+  }
+
+  render() {
     const self = this;
 
     const card = `
@@ -45,107 +85,141 @@ export default class MapChartTable {
       });
   }
 
+  plotTable() {
+    const self = this;
+    const tableData = self.data;
+    const columns = [];
+    for (const column of tableData[0]){
+      columns.push(`<th>${column}</th>`)
+    }
+
+    const rows = [];
+    for (let i = 1; i < tableData.length; i++) {
+      const cells = [];
+      for (const row of tableData[i]) {
+          cells.push(`<td>${row}</td>`);
+      }
+      rows.push(
+        `<tr>${cells.join("")}</tr>`
+      )
+    }
+    const canvas = document.createElement("div");
+    canvas.classList = "map__canva";
+    canvas.id = "canvas";
+
+    const result =  `<h1 class="map__title">Tabela de dados</h1>
+      <section class="ta-container">
+        <table class="ta">
+          <thead>
+            <tr>
+              ${columns.join("")}
+            </tr>
+          </thead>
+          <tbody>
+            ${rows.join("")}
+          </tbody>
+        </table>
+      </section>`
+
+    document.querySelector(".map__canva-section").innerHTML = result;
+
+    new TableActions("table", {
+      sortable: true,
+      searchable: true,
+      paginable: "buttons",
+      rowsPerPage: 7,
+    });
+  }
+
+  plotChart() {
+    const self = this;
+    const resultFilter = self.data.filter(
+      row => row[0] == self.currentSick && row[2] == self.currentState
+    );
+    const canvas = document.createElement("canvas");
+    canvas.classList = "map__canva";
+    canvas.width = 600;
+    canvas.height = 420;
+    canvas.id = "canvas";
+
+    const h1 = document.createElement("h1")
+    h1.classList = "map__title";
+    h1.innerText = `Cobertura vacinal para ${self.currentSick}`
+
+    const div = document.createElement("div");
+    div.style = "display: flex; gap: 4px; justify-content: end";
+
+
+    const selectSick = selectElement("doença", self.sicks, self.currentSick);
+    const selectState = selectElement("estado", self.states, self.currentState);
+
+    div.appendChild(selectSick)
+    div.appendChild(selectState)
+
+    document.querySelector(".map__canva-section").appendChild(h1);
+    document.querySelector(".map__canva-section").appendChild(div);
+    document.querySelector(".map__canva-section").appendChild(canvas);
+
+    document.querySelector(".map__canva-section")
+      .querySelector("select.map__select-doença")
+      .addEventListener('change', async (event) => {
+        const select = event.target;
+        self.currentSick = select.options[select.selectedIndex].value;
+        self.changeType("chart");
+      });
+
+    document.querySelector(".map__canva-section")
+      .querySelector("select.map__select-estado")
+      .addEventListener('change', async (event) => {
+        const select = event.target;
+        self.currentState = select.options[select.selectedIndex].value;
+        self.changeType("chart");
+      });
+
+    new Chart(document.getElementById("canvas"), {
+      type: 'line',
+      data: {
+        labels: [...resultFilter.map(row => row[1])],
+        datasets: [
+          {
+            data: [...resultFilter.map(row => row[3])],
+            label: self.currentState,
+            backgroundColor: "rgb(227, 52, 106)",
+            borderColor: "rgb(227, 52, 106)",
+          }
+        ]
+      },
+      options: {}
+    });
+  }
 
   async changeType(value) {
+    const self = this;
 
     // Remove all child of section chart
     const canvaSection = document.querySelector(".map__canva-section");
     canvaSection.innerHTML = "";
 
     if (value === "chart") {
-      const canvas = document.createElement("canvas");
-      canvas.classList = "map__canva";
-      canvas.width = 600;
-      canvas.height = 420;
-      canvas.id = "canvas";
-      document.querySelector(".map__canva-section").appendChild(canvas)
-
-      new Chart(document.getElementById("canvas"), {
-        type: 'line',
-        data: {
-          labels: [2018,2019,2020,2021,2022],
-          datasets: [{
-            data: [111,133,221,783,2478],
-            label: "Vacinações",
-            backgroundColor: "rgb(227, 52, 106)",
-            borderColor: "rgb(227, 52, 106)",
-          }, {
-            data: [809,947,1402,3700,267],
-            label: "Contaminações",
-            backgroundColor: "rgb(64, 42, 196)",
-            borderColor: "rgb(64, 42, 196)",
-          }]
-        },
-        options: {
-          title: {
-            display: true,
-            text: 'World population per region (in millions)'
-          }
-        }
-      });
+      self.plotChart();
     } else if (value === "map") {
       const canvas = document.createElement("div");
       canvas.classList = "map__canva";
       canvas.id = "canvas";
       document.querySelector(".map__canva-section").appendChild(canvas)
 
-      const mapChart = new MapChart(this.element.querySelector(".map__canva-section"));
+      const mapChart =
+        new MapChart(
+          this.element.querySelector(".map__canva-section"),
+          self.data,
+          self.sicks,
+          self.years,
+          self.statesAcronym
+        );
+
       await mapChart.init();
     } else {
-      const canvas = document.createElement("div");
-      canvas.classList = "map__canva";
-      canvas.id = "canvas";
-      const result =  `<section class="ta-container">
-        <table class="ta ta-responsive-full">
-          <thead>
-            <tr>
-              <th>Estado</th>
-              <th>Imunização</th>
-              <th>Valor</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr data-row-id="1">
-              <td>Paraíba</td>
-              <td>Polio</td>
-              <td>1000</td>
-            </tr>
-            <tr data-row-id="2">
-              <td>São Paulo</td>
-              <td>COVID-19</td>
-              <td>51234</td>
-            </tr>
-            <tr data-row-id="3">
-              <td>Bahia</td>
-              <td>BCG</td>
-              <td>3442</td>
-            </tr>
-            <tr data-row-id="4">
-              <td>Pernambuco</td>
-              <td>Polio</td>
-              <td>57456</td>
-            </tr>
-            <tr data-row-id="4">
-              <td>Lorem ipsum</td>
-              <td>Polio</td>
-              <td>57456</td>
-            </tr>
-            <tr data-row-id="4">
-              <td>Lorem ipsum</td>
-              <td>Polio</td>
-              <td>57456</td>
-            </tr>
-          </tbody>
-        </table>`
-
-      document.querySelector(".map__canva-section").innerHTML = result;
-
-      new TableActions("table", {
-        sortable: true,
-        searchable: true,
-        paginable: "buttons",
-      });
+      self.plotTable();
     }
-
   }
 };

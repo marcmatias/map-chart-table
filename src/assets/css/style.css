@@ -16,14 +16,16 @@ body {
   box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
 }
 
-.map__canva-section {
-  min-height: 420px;
+@media (min-width: 700px){
+  .map__canva-section {
+    height: 520px;
+  }
 }
 
 .map__title {
   font-weight: 600;
   color: #383838;
-  margin: 0px;
+  margin: 8px 0px;
 }
 
 .map__buttons-section {
@@ -87,5 +89,7 @@ body {
 
 .map__canva {
   margin: auto;
+  padding-bottom: 12px;
+  max-width: 100%;
 }
 

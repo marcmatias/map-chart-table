@@ -1,111 +1,111 @@
 export const statesAcronym = {
   "11": {
-    "acronym": "RO",
-    "name": "Rondônia"
+    "name": "Rondônia",
+    "acronym": "RO"
   },
   "12": {
-    "acronym": "AC",
-    "name": "Acre"
+    "name": "Acre",
+    "acronym": "AC"
   },
   "13": {
-    "acronym": "AM",
-    "name": "Amazonas"
+    "name": "Amazonas",
+    "acronym": "AM"
   },
   "14": {
-    "acronym": "RR",
-    "name": "Roraima"
+    "name": "Roraima",
+    "acronym": "RR"
   },
   "15": {
-    "acronym": "PA",
-    "name": "Pará"
+    "name": "Pará",
+    "acronym": "PA"
   },
   "16": {
-    "acronym": "AP",
-    "name": "Amapá"
+    "name": "Amapá",
+    "acronym": "AP"
   },
   "17": {
-    "acronym": "TO",
-    "name": "Tocantins"
+    "name": "Tocantins",
+    "acronym": "TO"
   },
   "21": {
-    "acronym": "MA",
-    "name": "Maranhão"
+    "name": "Maranhão",
+    "acronym": "MA"
   },
   "22": {
-    "acronym": "PI",
-    "name": "Piauí"
+    "name": "Piauí",
+    "acronym": "PI"
   },
   "23": {
-    "acronym": "CE",
-    "name": "Ceará"
+    "name": "Ceará",
+    "acronym": "CE"
   },
   "24": {
-    "acronym": "RN",
-    "name": "Rio Grande do Norte"
+    "name": "Rio Grande do Norte",
+    "acronym": "RN"
   },
   "25": {
-    "acronym": "PB",
-    "name": "Paraíba"
+    "name": "Paraíba",
+    "acronym": "PB"
   },
   "26": {
-    "acronym": "PE",
-    "name": "Pernambuco"
+    "name": "Pernambuco",
+    "acronym": "PE"
   },
   "27": {
-    "acronym": "AL",
-    "name": "Alagoas"
+    "name": "Alagoas",
+    "acronym": "AL"
   },
   "28": {
-    "acronym": "SE",
-    "name": "Sergipe"
+    "name": "Sergipe",
+    "acronym": "SE"
   },
   "29": {
-    "acronym": "BA",
-    "name": "Bahia"
+    "name": "Bahia",
+    "acronym": "BA"
   },
   "31": {
-    "acronym": "MG",
-    "name": "Minas Gerais"
+    "name": "Minas Gerais",
+    "acronym": "MG"
   },
   "32": {
-    "acronym": "ES",
-    "name": "Espírito Santo"
+    "name": "Espírito Santo",
+    "acronym": "ES"
   },
   "33": {
-    "acronym": "RJ",
-    "name": "Rio de Janeiro"
+    "name": "Rio de Janeiro",
+    "acronym": "RJ"
   },
   "35": {
-    "acronym": "SP",
-    "name": "São Paulo"
+    "name": "São Paulo",
+    "acronym": "SP"
   },
   "41": {
-    "acronym": "PR",
-    "name": "Paraná"
+    "name": "Paraná",
+    "acronym": "PR"
   },
   "42": {
-    "acronym": "SC",
-    "name": "Santa Catarina"
+    "name": "Santa Catarina",
+    "acronym": "SC"
   },
   "43": {
-    "acronym": "RS",
-    "name": "Rio Grande do Sul"
+    "name": "Rio Grande do Sul",
+    "acronym": "RS"
   },
   "50": {
-    "acronym": "MS",
-    "name": "Mato Grosso do Sul"
+    "name": "Mato Grosso do Sul",
+    "acronym": "MS"
   },
   "51": {
-    "acronym": "MT",
-    "name": "Mato Grosso"
+    "name": "Mato Grosso",
+    "acronym": "MT"
   },
   "52": {
-    "acronym": "GO",
-    "name": "Goiás"
+    "name": "Goiás",
+    "acronym": "GO"
   },
   "53": {
-    "acronym": "DF",
-    "name": "Distrito Federal"
+    "name": "Distrito Federal",
+    "acronym": "DF"
   }
 }
 
@@ -219,121 +219,6 @@ export const munAcronyms = {
     "name": "Imaculada"
   },
 }
-
-export const datasetsStates = [
-  {
-    label: "PB",
-    data: [
-      2000,
-      4000,
-    ]
-  },
-  {
-    label: "CE",
-    data: [
-      2000,
-      1000,
-    ]
-  },
-  {
-    label: "São Paulo",
-    data: [
-      1500,
-      3500,
-    ]
-  },
-  {
-    label: "Rio de Janeiro",
-    data: [
-      100,
-      1000,
-    ]
-  },
-  {
-    label: "Amapá",
-    data: [
-      100,
-      1000,
-    ]
-  },
-  {
-    label: "Amazonas",
-    data: [
-      5000,
-      5400,
-    ]
-  },
-  {
-    label: "Pará",
-    data: [
-      2000,
-      5000,
-    ]
-  },
-  {
-    label: "Mato Grosso",
-    data: [
-      2000,
-      1000,
-    ]
-  },
-  {
-    label: "Santa Catarina",
-    data: [
-      2000,
-      1000,
-    ]
-  },
-  {
-    label: "Rio Grande do Sul",
-    data: [
-      200,
-      90,
-    ]
-  },
-  {
-    label: "Bahia",
-    data: [
-      1234,
-      233,
-    ]
-  },
-  {
-    label: "Ceará",
-    data: [
-      1234,
-      233,
-    ]
-  },
-  {
-    label: "Rio Grande do Norte",
-    data: [
-      1234,
-      233,
-    ]
-  },
-  {
-    label: "Maranhão",
-    data: [
-      5000,
-      233,
-    ]
-  },
-  {
-    label: "Goiás",
-    data: [
-      5000,
-      233,
-    ]
-  },
-  {
-    label: "Minas Gerais",
-    data: [
-      1234,
-      233,
-    ]
-  },
-]
 
 export const datasetsMun = [
   {
