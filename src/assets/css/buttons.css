@@ -1,0 +1,75 @@
+.mct-button {
+  background-color: rgb(64, 42, 196);
+  padding: 4px 8px;
+  color: white;
+  font-size: .6rem;
+  font-weight: 600;
+  border: none;
+  border-radius: .25rem;
+  cursor: pointer;
+}
+
+.mct-button:hover {
+  background-color: rgb(131, 116, 217);
+}
+
+.mct-button--play {
+  background-color: rgb(233, 233, 237);
+  color: black;
+  line-height: 0px;
+}
+
+.mct-icon {
+  pointer-events: none;
+}
+
+.mct-button--play:hover {
+  background-color: rgb(243, 243, 237);
+}
+
+.mct-button--play:disabled {
+  background-color: rgb(249, 249, 243);
+  color: #ccc;
+  cursor: default;
+}
+
+/* Containers & Sections  */
+
+.mct-buttons {
+  display: flex;
+  gap: 4px;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+}
+
+@media (min-width: 700px){
+  .mct-buttons {
+    flex-direction: row;
+  }
+}
+
+.mct-buttons__start {
+  display: flex;
+  gap: 4px;
+  padding-bottom: 8px;
+  white-space: nowrap;
+}
+
+.mct-buttons__end {
+  display: flex;
+  gap: 4px;
+  padding-bottom: 20px;
+}
+
+.mct-buttons__footer {
+  display: flex;
+  justify-content: end;
+}
+
+.mct-container-button-play {
+  display: flex;
+  flex-direction: column;
+  justify-content: end;
+}
+

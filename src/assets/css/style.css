@@ -1,95 +1,97 @@
 @import "../../../node_modules/table-actions/dist/table-actions.min.css";
+@import "./buttons.css";
 
 body {
   /* Use better OS default fonts */
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
     Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
   font-size: 12px;
-}
+} 
 
-.map-chart-table {
-  margin: 30px 20px;
+.mct {
+  margin: 15px 30px;
   padding: 20px 25px;
-  max-width: 600px;
   border-radius: .25rem;
   background-color: white;
   box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
 }
 
-@media (min-width: 700px){
-  .map__canva-section {
-    height: 520px;
-  }
-}
-
-.map__title {
+.mct__title {
   font-weight: 600;
   color: #383838;
   margin: 8px 0px;
 }
 
-.map__buttons-section {
+.mct-select {
   display: flex;
-  gap: 8px;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
 }
 
-.map__button {
-  background-color: rgb(64, 42, 196);
+.mct-select__element {
   padding: 4px 8px;
-  color: white;
-  font-size: 10px;
+  font-size: .6rem;
   font-weight: 600;
   border: none;
   border-radius: .25rem;
   cursor: pointer;
 }
 
-.map__button:hover {
-  background-color: rgb(131, 116, 217);
+.mct-select__element:disabled {
+  background-color: rgb(249, 249, 243);
+  color: #ccc;
+  cursor: default;
 }
 
-.map__select {
-  padding: 4px 8px;
-  font-size: 10px;
-  font-weight: 600;
-  border: none;
-  border-radius: .25rem;
-  cursor: pointer;
-}
-
-.map__select-label {
-  font-size: 10px;
+.mct-select__label {
+  font-size: .6rem;
   font-weight: 600;
   color: #383838;
+  user-select: none;
 }
 
-.map__selects-section {
-  display: flex;
-  gap: 8px;
+.mct-canva {
+  width: 100%;
+  height: 471.5px;
 }
 
-.map__select-labeled {
-  padding-bottom: 20px;
+.mct-canva-year {
+  border-radius: .25rem;
+  color: #334155;
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin: 0px auto;
+  max-width: fit-content;
+  padding: 6px 12px;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 26px;
+  opacity: 0;
+  transition: visibility 0s, opacity 0.5s ease-in-out;
+  user-select: none;
 }
 
-.map__select-labeled--bottom {
-  padding-bottom: 0px;
+/* Demo purposes resize box */
+
+.resizable-container {
+  background-color: #ccc;
+  position: relative;
+  width: 800px;
+  min-width: 450px;
+  border: 1px solid gray;
 }
 
-.map__select-labeled--bottom {
-  padding-bottom: 0px;
+.resizable-content {
+  width: 100%;
+  height: 100%;
 }
 
-.map__buttons-section-footer {
-  display: flex;
-  justify-content: end;
+.resizable-handle {
+  position: absolute;
+  top: 0;
+  right: 0; /* Offset the handle slightly to the right */
+  width: 10px;
+  height: 100%;
+  background-color: gray;
+  cursor: col-resize; /* Set cursor to horizontal resize icon */
 }
-
-.map__canva {
-  margin: auto;
-  padding-bottom: 12px;
-  max-width: 100%;
-}
-

@@ -36,7 +36,7 @@ export default class MapChartTable {
 
     const mapChart =
       new MapChart(
-        this.element.querySelector(".map__canva-section"),
+        this.element.querySelector(".mct__canva-section"),
         self.data,
         self.sicks,
         self.years,
@@ -61,11 +61,11 @@ export default class MapChartTable {
     const self = this;
 
     const card = `
-        <section class="map__canva-section"></section>
-        <section class="map__buttons-section-footer">
-          <div class="map__select-labeled map__select-labeled--bottom">
-            <label class="map__select-label"  for="type" class="text-xs">Tipo</label><br>
-            <select class="map__select" name="type" id="type">
+        <section class="mct__canva-section"></section>
+        <section class="mct-buttons__footer">
+          <div class="mct-select">
+            <label class="mct-select__label" for="type" class="text-xs">Tipo</label>
+            <select class="mct-select__element" name="type" id="type">
               <option value="map">Mapa</option>
               <option value="chart">Gráfico</option>
               <option value="table">Tabela</option>
@@ -78,7 +78,7 @@ export default class MapChartTable {
     self.element.innerHTML = card;
 
     self.element
-      .querySelector("select.map__select")
+      .querySelector("select.mct-select__element")
       .addEventListener('change', async (event) => {
         const select = event.target;
         await self.changeType(select.options[select.selectedIndex].value);
@@ -104,10 +104,10 @@ export default class MapChartTable {
       )
     }
     const canvas = document.createElement("div");
-    canvas.classList = "map__canva";
+    canvas.classList = "mct__canva";
     canvas.id = "canvas";
 
-    const result =  `<h1 class="map__title">Tabela de dados</h1>
+    const result =  `<h1 class="mct__title">Tabela de dados</h1>
       <section class="ta-container">
         <table class="ta">
           <thead>
@@ -121,13 +121,13 @@ export default class MapChartTable {
         </table>
       </section>`
 
-    document.querySelector(".map__canva-section").innerHTML = result;
+    document.querySelector(".mct__canva-section").innerHTML = result;
 
     new TableActions("table", {
       sortable: true,
       searchable: true,
       paginable: "buttons",
-      rowsPerPage: 7,
+      rowsPerPage: 8,
     });
   }
 
@@ -137,17 +137,16 @@ export default class MapChartTable {
       row => row[0] == self.currentSick && row[2] == self.currentState
     );
     const canvas = document.createElement("canvas");
-    canvas.classList = "map__canva";
-    canvas.width = 600;
-    canvas.height = 420;
+    canvas.classList = "mct-canva";
+    canvas.style.maxHeight = "471.5px";
     canvas.id = "canvas";
 
     const h1 = document.createElement("h1")
-    h1.classList = "map__title";
+    h1.classList = "mct__title";
     h1.innerText = `Cobertura vacinal para ${self.currentSick}`
 
     const div = document.createElement("div");
-    div.style = "display: flex; gap: 4px; justify-content: end";
+    div.style = "display: flex; gap: 4px; justify-content: end; margin-bottom: 20.5px";
 
 
     const selectSick = selectElement("doença", self.sicks, self.currentSick);
@@ -156,20 +155,20 @@ export default class MapChartTable {
     div.appendChild(selectSick)
     div.appendChild(selectState)
 
-    document.querySelector(".map__canva-section").appendChild(h1);
-    document.querySelector(".map__canva-section").appendChild(div);
-    document.querySelector(".map__canva-section").appendChild(canvas);
+    document.querySelector(".mct__canva-section").appendChild(h1);
+    document.querySelector(".mct__canva-section").appendChild(div);
+    document.querySelector(".mct__canva-section").appendChild(canvas);
 
-    document.querySelector(".map__canva-section")
-      .querySelector("select.map__select-doença")
+    document.querySelector(".mct__canva-section")
+      .querySelector("select.mct-select__doença")
       .addEventListener('change', async (event) => {
         const select = event.target;
         self.currentSick = select.options[select.selectedIndex].value;
         self.changeType("chart");
       });
 
-    document.querySelector(".map__canva-section")
-      .querySelector("select.map__select-estado")
+    document.querySelector(".mct__canva-section")
+      .querySelector("select.mct-select__estado")
       .addEventListener('change', async (event) => {
         const select = event.target;
         self.currentState = select.options[select.selectedIndex].value;
@@ -189,7 +188,10 @@ export default class MapChartTable {
           }
         ]
       },
-      options: {}
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+      }
     });
   }
 
@@ -197,20 +199,20 @@ export default class MapChartTable {
     const self = this;
 
     // Remove all child of section chart
-    const canvaSection = document.querySelector(".map__canva-section");
+    const canvaSection = document.querySelector(".mct__canva-section");
     canvaSection.innerHTML = "";
 
     if (value === "chart") {
       self.plotChart();
     } else if (value === "map") {
       const canvas = document.createElement("div");
-      canvas.classList = "map__canva";
+      canvas.classList = "mct-canva";
       canvas.id = "canvas";
-      document.querySelector(".map__canva-section").appendChild(canvas)
+      document.querySelector(".mct__canva-section").appendChild(canvas)
 
       const mapChart =
         new MapChart(
-          this.element.querySelector(".map__canva-section"),
+          this.element.querySelector(".mct__canva-section"),
           self.data,
           self.sicks,
           self.years,

@@ -47,17 +47,21 @@ export default class MapChart {
     self.setData(maxDatasetValue, 0, datasetsStates, self.statesAcronym)
   }
 
-  // Quering map and
-  async applyMap(mapUrl) {
-    const self = this;
+  async queryMap(mapUrl) {
     const svg = await fetch(mapUrl);
     const mapText = await svg.text();
+    return mapText;
+  }
+
+  async applyMap(mapUrl) {
+    const self = this;
+    const map = await self.queryMap(mapUrl);
 
     const svgContainer = self.element.querySelector('#canvas');
-    svgContainer.innerHTML = mapText;
+    svgContainer.innerHTML = map;
 
     const svgElement = svgContainer.querySelector("svg");
-    svgElement.style.maxWidth = "70%";
+    svgElement.style.maxWidth = "100%";
     svgElement.style.height = "100%";
     svgElement.style.margin = "auto";
     svgElement.style.display = "block";
@@ -109,9 +113,10 @@ export default class MapChart {
   }
 
   async loadMapState () {
-    await this.applyMap(this.stateMap);
+    const self = this;
+    await self.applyMap(self.stateMap);
     const maxDatasetValue = Math.max(...datasetsMun.map(e => e.data).flat());
-    this.setData(maxDatasetValue, 0, datasetsMun, munAcronyms);
+    self.setData(maxDatasetValue, 0, datasetsMun, munAcronyms);
   }
 
   render () {
@@ -130,29 +135,37 @@ export default class MapChart {
 
     const title = `${self.mapTitle} ${self.currentSick}`;
     const map = `
-        <h1 class="map__title">${ title }</h1>
-        <section class="map__buttons-section">
-          <div>
-            <button class="map__button map__button--state">Por estado</button>
-            <button class="map__button map__button--city">Por município</button>
+        <h1 class="mct__title">${ title }</h1>
+        <section class="mct-buttons">
+          <div class="mct-buttons__start">
+            <button class="mct-button mct__button--state">Por estado</button>
+            <button class="mct-button mct__button--city">Por município</button>
           </div>
-          <div class="map__selects-section">
-            <div class="map__select-labeled">
-              <label class="map__select-label" for="sick" class="text-xs">Doença</label><br>
-              <select class="map__select map__select-sicks" name="sicks" id="sicks">
+          <div class="mct-buttons__end">
+            <div class="mct-select">
+              <label class="mct-select__label" for="sick" class="text-xs">Doença</label>
+              <select class="mct-select__element mct-select__sicks" name="sicks" id="sicks">
                 ${sicks.join("")}
               </select>
             </div>
-            <div class="map__select-labeled">
-              <label class="map__select-label" for="years" class="text-xs">Ano</label><br>
-              <select class="map__select map__select-years" name="years" id="years">
+            <div class="mct-select">
+              <label class="mct-select__label" for="years" class="text-xs">Ano</label>
+              <select class="mct-select__element mct-select__years" name="years" id="years">
                 ${years.join("")}
               </select>
             </div>
+            <div class="mct-container-button-play">
+              <button class="mct-button mct-button--play" title="Clique para executar demonstração de todos os anos">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" class="mct-icon" viewBox="0 0 16 16">
+                  <path d="m11.596 8.697-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"/>
+                </svg>
+              </button>
+            </div>
           </div>
         </section>
-        <section class="map__canva-section">
-          <div id="canvas" class="map__canva" width="600" height="420"></div>
+        <section class="mct__canva-section">
+          <div id="canvas" class="mct-canva"></div>
+          <div class="mct-canva-year"></div>
         </section>
       `;
 
@@ -160,32 +173,52 @@ export default class MapChart {
 
     // Listeners
     self.element
-      .querySelector("button.map__button--state")
+      .querySelector("button.mct__button--state")
       .addEventListener('click', async () => {
-        self.loadMapNation();
+        await self.loadMapNation();
       });
 
     self.element
-      .querySelector("button.map__button--city")
-      .addEventListener('click', () => {
-        self.loadMapState();
+      .querySelector("button.mct__button--city")
+      .addEventListener('click', async () => {
+        await self.loadMapState();
       });
 
     self.element
-      .querySelector("select.map__select-sicks")
+      .querySelector("button.mct-button--play")
+      .addEventListener('click', async (e) => {
+        const selectYears = self.element.querySelector("select.mct-select__years");
+        const yearDisplay = self.element.querySelector(".mct-canva-year");
+        yearDisplay.style.opacity = "1";
+        selectYears.disabled = true;
+        e.target.disabled = true;
+        const select = self.element.querySelector("select.mct-select__years");
+        for (const year of self.years) {
+          select.value = year;
+          yearDisplay.innerHTML = year;
+          select.dispatchEvent(new Event('change'));
+          await new Promise(resolve => setTimeout(resolve, 1500));
+        }
+        e.target.disabled = false;
+        selectYears.disabled = false;
+        yearDisplay.style.opacity = "0";
+      });
+
+    self.element
+      .querySelector("select.mct-select__sicks")
       .addEventListener('change', async (event) => {
         const select = event.target;
         self.currentSick = select.options[select.selectedIndex].value;
-        self.element.querySelector(".map__title").innerHTML = `${self.mapTitle} ${self.currentSick}`
-        self.loadMapNation()
+        self.element.querySelector(".mct__title").innerHTML = `${self.mapTitle} ${self.currentSick}`
+        await self.loadMapNation()
       });
 
     self.element
-      .querySelector("select.map__select-years")
+      .querySelector("select.mct-select__years")
       .addEventListener('change', async (event) => {
         const select = event.target;
         self.currentYear = select.options[select.selectedIndex].value;
-        self.loadMapNation()
+        await self.loadMapNation()
       });
   }
 }

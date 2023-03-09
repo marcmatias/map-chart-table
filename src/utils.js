@@ -51,10 +51,10 @@ export function selectElement(name, options, selected) {
   const div = document.createElement("div");
 
   div.innerHTML = `
-    <div class="map__selects-section">
-      <div class="map__select-labeled">
-        <label class="map__select-label" for="${name}" class="text-xs">${name.charAt(0).toUpperCase() + name.slice(1)}</label><br>
-        <select class="map__select map__select-${name}" name="${name}" id="${name}">
+    <div class="mct__selects-section">
+      <div class="mct-select">
+        <label class="mct-select__label" for="${name}" class="text-xs">${name.charAt(0).toUpperCase() + name.slice(1)}</label>
+        <select class="mct-select__element mct-select__${name}" name="${name}" id="${name}">
           ${result.join("")}
         </select>
       </div>
