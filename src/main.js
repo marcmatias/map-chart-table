@@ -3,6 +3,7 @@ import { selectElement } from "./utils";
 import './assets/css/style.css'
 import Chart from "chart.js/auto";
 import TableActions from "table-actions";
+import { DataFetcher } from "./data-fetcher.js";
 
 import MapChart from "./map-chart";
 
@@ -10,8 +11,15 @@ export default class MapChartTable {
 
   constructor(element, data) {
     this.element = element;
-    this.data = this.formatedData(data);
     this.statesAcronym = statesAcronym;
+    this.api = new DataFetcher("api/");
+  }
+
+  async refreshData() {
+    const self = this;
+
+    self.currentResult = await self.api.request(self.currentSick);
+    self.years = Object.keys(self.currentResult);
   }
 
   async init() {
@@ -22,41 +30,25 @@ export default class MapChartTable {
     for (const [, value] of Object.entries(statesAcronym)){
       states.push(value.acronym)
     }
+
     self.states = states.sort();
     self.currentState = states[0];
 
-    const sicks = [ ...new Set( self.data.map(row => row[0]) ) ];
-    sicks.shift()
-    self.sicks = sicks;
+    const sicks = await self.api.request("options");
+    self.sicks = sicks.result;
     self.currentSick = self.sicks[0];
 
-    const years = [ ...new Set( self.data.map(row => row[1]) ) ];
-    years.shift()
-    self.years = years;
+    await self.refreshData();
 
     const mapChart =
       new MapChart({
         element: this.element.querySelector(".mct__canva-section"),
-        data: self.data,
-        sicks: self.sicks,
-        years: self.years,
+        api: self.api,
         statesAcronym: self.statesAcronym,
         legendTitle: "Porcentagem de vacinação da população brasileira",
         legendSource: "IBGE 2023."
       });
     await mapChart.init();
-  }
-
-  formatedData(data) {
-    return data
-      .trim()
-      .split('\n')
-      .map(row =>
-        row.split(',').filter(
-          // if not Empty add to results
-          value => !['', null, undefined].includes(value)
-        )
-      );
   }
 
   render() {
@@ -87,9 +79,31 @@ export default class MapChartTable {
       });
   }
 
+  convertObjectToArray(obj) {
+    const result = [];
+
+    // Get the keys of the object and sort them in ascending order
+    const years = Object.keys(obj).sort();
+
+    // Push the headers (year, acronym, value) to the result array
+    result.push(['Ano', 'Sigla', 'Resultado']);
+
+    // Loop through each year
+    for (const year of years) {
+      // Loop through each state in the year
+      for (const [acronym, value] of Object.entries(obj[year])) {
+        // Push the year, acronym, and value to the result array as an array
+        result.push([year, acronym, value]);
+      }
+    }
+
+    return result;
+  }
+
+  // TODO: Add select to change sick type
   plotTable() {
     const self = this;
-    const tableData = self.data;
+    const tableData = self.convertObjectToArray(self.currentResult);
     const columns = [];
     for (const column of tableData[0]){
       columns.push(`<th>${column.charAt(0).toUpperCase() + column.slice(1)}</th>`)
@@ -135,9 +149,7 @@ export default class MapChartTable {
 
   plotChart() {
     const self = this;
-    const resultFilter = self.data.filter(
-      row => row[0] == self.currentSick && row[2] == self.currentState
-    );
+
     const canvas = document.createElement("canvas");
     canvas.classList = "mct-canva";
     canvas.style.maxHeight = "475px";
@@ -166,6 +178,7 @@ export default class MapChartTable {
       .addEventListener('change', async (event) => {
         const select = event.target;
         self.currentSick = select.options[select.selectedIndex].value;
+        self.refreshData();
         self.changeType("chart");
       });
 
@@ -174,16 +187,17 @@ export default class MapChartTable {
       .addEventListener('change', async (event) => {
         const select = event.target;
         self.currentState = select.options[select.selectedIndex].value;
+        self.refreshData();
         self.changeType("chart");
       });
 
     new Chart(document.getElementById("canvas"), {
       type: 'line',
       data: {
-        labels: [...resultFilter.map(row => row[1])],
+        labels: [...self.years],
         datasets: [
           {
-            data: [...resultFilter.map(row => row[3])],
+            data: self.years.map(year => self.currentResult[year][self.currentState]),
             label: self.currentState,
             backgroundColor: "rgb(227, 52, 106)",
             borderColor: "rgb(227, 52, 106)",
@@ -235,14 +249,11 @@ export default class MapChartTable {
       const mapChart =
         new MapChart({
           element: this.element.querySelector(".mct__canva-section"),
-          data: self.data,
-          sicks: self.sicks,
-          years: self.years,
+          api: self.api,
           statesAcronym: self.statesAcronym,
           legendTitle: "Porcentagem de vacinação da população brasileira",
           legendSource: "IBGE 2023."
         });
-
       await mapChart.init();
     } else {
       self.plotTable();

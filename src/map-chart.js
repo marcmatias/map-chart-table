@@ -3,19 +3,14 @@ import { getColor } from "./utils.js";
 
 export default class MapChart {
 
-  constructor({ element, data, sicks, years, statesAcronym, legendTitle, legendSource }) {
+  constructor({ element, api, statesAcronym, legendTitle, legendSource }) {
     this.nationMap =
       'https://servicodados.ibge.gov.br/api/v3/malhas/paises/BR?formato=image/svg+xml&qualidade=intermediaria&intrarregiao=UF';
     this.stateMap =
       'https://servicodados.ibge.gov.br/api/v3/malhas/estados/25?formato=image/svg+xml&qualidade=intermediaria&intrarregiao=municipio';
     this.element = element;
-    this.sicks = sicks;
-    this.years = years;
-
     this.mapTitle = "Cobertura vacinal para";
-    this.currentSick = this.sicks[0];
-    this.currentYear = this.years[0]
-    this.data = data;
+    this.api = api;
     this.statesAcronym = statesAcronym;
     this.legendTitle = legendTitle;
     this.legendSource = legendSource;
@@ -23,30 +18,45 @@ export default class MapChart {
 
   async init() {
     const self = this;
-
     self.render();
+
+    const sicks = await self.api.request("options");
+    self.sicks = sicks.result;
+    self.currentSick = self.sicks[0];
+
+    await self.refreshData()
     await self.loadMapNation();
+  }
+
+  async refreshData() {
+    const self = this;
+
+    self.datasetStates =
+      await self.api.request(self.currentSick);
+
+    self.years = Object.keys(self.datasetStates);
+    self.currentYear = self.years[0];
+    self.render();
   }
 
   async loadMapNation() {
     const self = this;
 
-    let datasetsStates =
-      self.data.filter(row => row[0] == self.currentSick && row[1] == self.currentYear)
-    datasetsStates = datasetsStates.map(row =>
-      {
-        return {
-          label: row[2],
-          data: [
-            row[3],
-          ]
+    const result = 
+      Object.entries(
+        self.datasetStates[self.currentYear]
+      ).map(([key, val]) =>
+        {
+          return {
+            label: key,
+            data: [val]
+          }
         }
-      }
-    )
+      )
 
     await self.applyMap(self.nationMap);
     self.setData({
-      datasetsStates,
+      datasetStates: result,
       contentData: self.statesAcronym
     })
   }
@@ -74,7 +84,7 @@ export default class MapChart {
   setData(
     {
       row = 0,
-      datasetsStates,
+      datasetStates,
       contentData
     } = {}
   ) {
@@ -82,7 +92,7 @@ export default class MapChart {
     // Querying map country states setting eventListener
     for (const path of self.element.querySelectorAll('#canvas svg path')) {
       const content = contentData[path.id];
-      const dataset = self.findElement(datasetsStates, content);
+      const dataset = self.findElement(datasetStates, content);
 
       if (!dataset || !dataset.data[row]) {
         path.style.fill = "#c7c7c7";
@@ -93,9 +103,6 @@ export default class MapChart {
         getColor(dataset.data[row])
     };
 
-    self.element.querySelector(".mct-legend-top").innerHTML = "100%";
-    self.element.querySelector(".mct-legend-middle").innerHTML = "50%";
-    self.element.querySelector(".mct-legend-base").innerHTML = "0%";
     if (self.legendTitle) {
       self.element.querySelector(".mct-legend-text").innerHTML = self.legendTitle;
     }
@@ -140,14 +147,17 @@ export default class MapChart {
     const self = this;
 
     const years = [] ;
-    for (const year of self.years) {
-      years.push(`<option value="${year}">${year}</option>`);
+    if(self.years) {
+      for (const year of self.years) {
+        years.push(`<option value="${year}" ${ self.currentYear == year ? 'selected' : ''}>${year}</option>`);
+      }
     }
 
     const sicks = [];
-
-    for (const sick of self.sicks) {
-      sicks.push(`<option value="${sick}">${sick}</option>`);
+    if(self.sicks) {
+      for (const sick of self.sicks) {
+        sicks.push(`<option value="${sick}" ${ self.currentSick === sick ? 'selected' : ''}>${sick}</option>`);
+      }
     }
 
     const title = `${self.mapTitle} ${self.currentSick}`;
@@ -181,15 +191,19 @@ export default class MapChart {
           </div>
         </section>
         <section class="mct__canva-section">
-          <div id="canvas" class="mct-canva"></div>
+          <div id="canvas" class="mct-canva">
+            <div class="spinner-container">
+              <div id="spinner" class="spinner"></div>
+            </div>
+          </div>
           <div class="mct-canva-year"></div>
           <div class="mct-legend">
-            <div class="" style="display:flex; gap: 4px;">
+            <div style="display:flex; gap: 4px;">
               <div class="mct-legend__gradient"></div>
               <div class="mct-legend__content">
-                <div class="mct-legend-top"></div>
-                <div class="mct-legend-middle"></div>
-                <div class="mct-legend-base"></div>
+                <div class="mct-legend-top">100%</div>
+                <div class="mct-legend-middle">50%</div>
+                <div class="mct-legend-base">0%</div>
               </div>
             </div>
             <div class="mct-legend-text"></div>
@@ -239,7 +253,8 @@ export default class MapChart {
         const select = event.target;
         self.currentSick = select.options[select.selectedIndex].value;
         self.element.querySelector(".mct__title").innerHTML = `${self.mapTitle} ${self.currentSick}`
-        await self.loadMapNation()
+        await self.refreshData();
+        await self.loadMapNation();
       });
 
     self.element
@@ -247,7 +262,7 @@ export default class MapChart {
       .addEventListener('change', async (event) => {
         const select = event.target;
         self.currentYear = select.options[select.selectedIndex].value;
-        await self.loadMapNation()
+        await self.loadMapNation();
       });
   }
 }
