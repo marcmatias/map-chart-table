@@ -22,7 +22,7 @@ export default class MapChartTable {
     for (const [, value] of Object.entries(statesAcronym)){
       states.push(value.acronym)
     }
-    self.states = states;
+    self.states = states.sort();
     self.currentState = states[0];
 
     const sicks = [ ...new Set( self.data.map(row => row[0]) ) ];
@@ -35,13 +35,15 @@ export default class MapChartTable {
     self.years = years;
 
     const mapChart =
-      new MapChart(
-        this.element.querySelector(".mct__canva-section"),
-        self.data,
-        self.sicks,
-        self.years,
-        self.statesAcronym
-      );
+      new MapChart({
+        element: this.element.querySelector(".mct__canva-section"),
+        data: self.data,
+        sicks: self.sicks,
+        years: self.years,
+        statesAcronym: self.statesAcronym,
+        legendTitle: "Porcentagem de vacinação da população brasileira",
+        legendSource: "IBGE 2023."
+      });
     await mapChart.init();
   }
 
@@ -90,7 +92,7 @@ export default class MapChartTable {
     const tableData = self.data;
     const columns = [];
     for (const column of tableData[0]){
-      columns.push(`<th>${column}</th>`)
+      columns.push(`<th>${column.charAt(0).toUpperCase() + column.slice(1)}</th>`)
     }
 
     const rows = [];
@@ -138,7 +140,7 @@ export default class MapChartTable {
     );
     const canvas = document.createElement("canvas");
     canvas.classList = "mct-canva";
-    canvas.style.maxHeight = "471.5px";
+    canvas.style.maxHeight = "475px";
     canvas.id = "canvas";
 
     const h1 = document.createElement("h1")
@@ -191,6 +193,26 @@ export default class MapChartTable {
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        scales: {
+          x: {
+            title: {
+              display: true,
+              text: 'Ano'
+            }
+          },
+          y: {
+            ticks: {
+              // Include a dollar sign in the ticks
+              callback: function(value, index, ticks) {
+                return value + "%";
+              }
+            },
+            title: {
+              display: true,
+              text: 'Porcentagem'
+            }
+          }
+        }
       }
     });
   }
@@ -211,13 +233,15 @@ export default class MapChartTable {
       document.querySelector(".mct__canva-section").appendChild(canvas)
 
       const mapChart =
-        new MapChart(
-          this.element.querySelector(".mct__canva-section"),
-          self.data,
-          self.sicks,
-          self.years,
-          self.statesAcronym
-        );
+        new MapChart({
+          element: this.element.querySelector(".mct__canva-section"),
+          data: self.data,
+          sicks: self.sicks,
+          years: self.years,
+          statesAcronym: self.statesAcronym,
+          legendTitle: "Porcentagem de vacinação da população brasileira",
+          legendSource: "IBGE 2023."
+        });
 
       await mapChart.init();
     } else {

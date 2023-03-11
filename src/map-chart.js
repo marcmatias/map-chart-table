@@ -3,7 +3,7 @@ import { getColor } from "./utils.js";
 
 export default class MapChart {
 
-  constructor(element, data, sicks, years, statesAcronym) {
+  constructor({ element, data, sicks, years, statesAcronym, legendTitle, legendSource }) {
     this.nationMap =
       'https://servicodados.ibge.gov.br/api/v3/malhas/paises/BR?formato=image/svg+xml&qualidade=intermediaria&intrarregiao=UF';
     this.stateMap =
@@ -17,6 +17,8 @@ export default class MapChart {
     this.currentYear = this.years[0]
     this.data = data;
     this.statesAcronym = statesAcronym;
+    this.legendTitle = legendTitle;
+    this.legendSource = legendSource;
   }
 
   async init() {
@@ -43,8 +45,10 @@ export default class MapChart {
     )
 
     await self.applyMap(self.nationMap);
-    const maxDatasetValue = Math.max(...datasetsStates.map(e => e.data).flat());
-    self.setData(maxDatasetValue, 0, datasetsStates, self.statesAcronym)
+    self.setData({
+      datasetsStates,
+      contentData: self.statesAcronym
+    })
   }
 
   async queryMap(mapUrl) {
@@ -67,11 +71,18 @@ export default class MapChart {
     svgElement.style.display = "block";
   }
 
-  setData(maxDatasetValue, row, datasetsStates, contentData) {
+  setData(
+    {
+      row = 0,
+      datasetsStates,
+      contentData
+    } = {}
+  ) {
+    const self = this;
     // Querying map country states setting eventListener
-    for (const path of document.querySelectorAll('#canvas svg path')) {
+    for (const path of self.element.querySelectorAll('#canvas svg path')) {
       const content = contentData[path.id];
-      const dataset = this.findElement(datasetsStates, content);
+      const dataset = self.findElement(datasetsStates, content);
 
       if (!dataset || !dataset.data[row]) {
         path.style.fill = "#c7c7c7";
@@ -79,13 +90,17 @@ export default class MapChart {
       }
 
       path.style.fill =
-        getColor(
-          Math.floor(
-            (
-              dataset.data[row] / maxDatasetValue
-            ) * 100
-          ),
-        )
+        getColor(dataset.data[row])
+    };
+
+    self.element.querySelector(".mct-legend-top").innerHTML = "100%";
+    self.element.querySelector(".mct-legend-middle").innerHTML = "50%";
+    self.element.querySelector(".mct-legend-base").innerHTML = "0%";
+    if (self.legendTitle) {
+      self.element.querySelector(".mct-legend-text").innerHTML = self.legendTitle;
+    }
+    if (self.legendSource) {
+      self.element.querySelector(".mct-legend-source").innerHTML = "Fonte: " + self.legendSource;
     }
   }
 
@@ -115,8 +130,10 @@ export default class MapChart {
   async loadMapState () {
     const self = this;
     await self.applyMap(self.stateMap);
-    const maxDatasetValue = Math.max(...datasetsMun.map(e => e.data).flat());
-    self.setData(maxDatasetValue, 0, datasetsMun, munAcronyms);
+    self.setData({
+      datasetsStates: datasetsMun,
+      contentData: munAcronyms
+    });
   }
 
   render () {
@@ -166,6 +183,18 @@ export default class MapChart {
         <section class="mct__canva-section">
           <div id="canvas" class="mct-canva"></div>
           <div class="mct-canva-year"></div>
+          <div class="mct-legend">
+            <div class="" style="display:flex; gap: 4px;">
+              <div class="mct-legend__gradient"></div>
+              <div class="mct-legend__content">
+                <div class="mct-legend-top"></div>
+                <div class="mct-legend-middle"></div>
+                <div class="mct-legend-base"></div>
+              </div>
+            </div>
+            <div class="mct-legend-text"></div>
+            <div class="mct-legend-source"></div>
+          </div>
         </section>
       `;
 
