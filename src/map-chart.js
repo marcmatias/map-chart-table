@@ -58,7 +58,7 @@ export default class MapChart {
     if (!self.currentSick) {
       self.currentSick = self.sicks[0];
     }
-  }
+}
 
   async loadMapNation() {
     const self = this;
