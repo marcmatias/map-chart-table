@@ -1,4 +1,3 @@
-import { statesAcronym }  from "./data.js";
 import { selectElement } from "./utils";
 import './assets/css/style.css'
 import Chart from "chart.js/auto";
@@ -9,9 +8,8 @@ import MapChart from "./map-chart";
 
 export default class MapChartTable {
 
-  constructor(element, data) {
+  constructor(element) {
     this.element = element;
-    this.statesAcronym = statesAcronym;
     this.api = new DataFetcher("api/");
   }
 
@@ -26,17 +24,27 @@ export default class MapChartTable {
     const self = this;
     self.render();
 
+
+    const [statesAcronym, sicks] =  await Promise.all(
+      [
+        self.api.request("statesAcronym"),
+        self.api.request("options")
+      ]
+    );
+
+    self.statesAcronym = statesAcronym;
+    self.sicks = sicks.result;
+
     const states = [];
-    for (const [, value] of Object.entries(statesAcronym)){
+    for (const [, value] of Object.entries(self.statesAcronym)){
       states.push(value.acronym)
     }
 
     self.states = states.sort();
     self.currentState = states[0];
 
-    const sicks = await self.api.request("options");
-    self.sicks = sicks.result;
     self.currentSick = self.sicks[0];
+
 
     await self.refreshData();
 

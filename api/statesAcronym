@@ -1,0 +1,110 @@
+{
+  "11": {
+    "name": "Rondônia",
+    "acronym": "RO"
+  },
+  "12": {
+    "name": "Acre",
+    "acronym": "AC"
+  },
+  "13": {
+    "name": "Amazonas",
+    "acronym": "AM"
+  },
+  "14": {
+    "name": "Roraima",
+    "acronym": "RR"
+  },
+  "15": {
+    "name": "Pará",
+    "acronym": "PA"
+  },
+  "16": {
+    "name": "Amapá",
+    "acronym": "AP"
+  },
+  "17": {
+    "name": "Tocantins",
+    "acronym": "TO"
+  },
+  "21": {
+    "name": "Maranhão",
+    "acronym": "MA"
+  },
+  "22": {
+    "name": "Piauí",
+    "acronym": "PI"
+  },
+  "23": {
+    "name": "Ceará",
+    "acronym": "CE"
+  },
+  "24": {
+    "name": "Rio Grande do Norte",
+    "acronym": "RN"
+  },
+  "25": {
+    "name": "Paraíba",
+    "acronym": "PB"
+  },
+  "26": {
+    "name": "Pernambuco",
+    "acronym": "PE"
+  },
+  "27": {
+    "name": "Alagoas",
+    "acronym": "AL"
+  },
+  "28": {
+    "name": "Sergipe",
+    "acronym": "SE"
+  },
+  "29": {
+    "name": "Bahia",
+    "acronym": "BA"
+  },
+  "31": {
+    "name": "Minas Gerais",
+    "acronym": "MG"
+  },
+  "32": {
+    "name": "Espírito Santo",
+    "acronym": "ES"
+  },
+  "33": {
+    "name": "Rio de Janeiro",
+    "acronym": "RJ"
+  },
+  "35": {
+    "name": "São Paulo",
+    "acronym": "SP"
+  },
+  "41": {
+    "name": "Paraná",
+    "acronym": "PR"
+  },
+  "42": {
+    "name": "Santa Catarina",
+    "acronym": "SC"
+  },
+  "43": {
+    "name": "Rio Grande do Sul",
+    "acronym": "RS"
+  },
+  "50": {
+    "name": "Mato Grosso do Sul",
+    "acronym": "MS"
+  },
+  "51": {
+    "name": "Mato Grosso",
+    "acronym": "MT"
+  },
+  "52": {
+    "name": "Goiás",
+    "acronym": "GO"
+  },
+  "53": {
+    "name": "Distrito Federal",
+    "acronym": "DF"
+  }
+}

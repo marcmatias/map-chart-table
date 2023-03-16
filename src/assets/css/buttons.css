@@ -13,6 +13,12 @@
   background-color: rgb(131, 116, 217);
 }
 
+.mct-button:disabled {
+  background-color: rgb(249, 249, 243);
+  color: #ccc;
+  cursor: default;
+}
+
 .mct-button--play {
   background-color: rgb(233, 233, 237);
   color: black;

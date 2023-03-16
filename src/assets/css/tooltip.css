@@ -1,0 +1,25 @@
+.mct-tooltip {
+  display: none;
+  position: absolute;
+  background-color: white;
+  border: 1px solid grey;
+  border-radius: 5px;
+  box-shadow: rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px;
+  padding: 12px 12px;
+  font-size: 14px;
+  z-index: 1;
+  user-select: none;
+  pointer-events: none;
+}
+
+.mct-tooltip__title {
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 4px;
+}
+
+.mct-tooltip__result {
+  font-weight: 600;
+  color: #374151;
+  font-size: 12px;
+}

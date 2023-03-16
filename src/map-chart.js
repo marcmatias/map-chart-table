@@ -1,4 +1,3 @@
-import { munAcronyms, datasetsMun }  from "./data.js";
 import { getColor } from "./utils.js";
 
 export default class MapChart {
@@ -12,37 +11,59 @@ export default class MapChart {
     this.mapTitle = "Cobertura vacinal para";
     this.api = api;
     this.statesAcronym = statesAcronym;
+    this.citiesAcronym = {};
     this.legendTitle = legendTitle;
     this.legendSource = legendSource;
+    this.loadFunction = this.loadMapNation;
   }
 
   async init() {
     const self = this;
     self.render();
 
-    const sicks = await self.api.request("options");
-    self.sicks = sicks.result;
-    self.currentSick = self.sicks[0];
+    self.citiesAcronym = await self.api.requestState("PB/citiesAcronym");
 
     await self.refreshData()
-    await self.loadMapNation();
+    await self.loadFunction();
   }
 
   async refreshData() {
     const self = this;
 
+    await self.sicksUpdate();
+
     self.datasetStates =
       await self.api.request(self.currentSick);
 
+    self.datasetCities =
+      await self.api.requestState("PB/" + self.currentSick);
+
+
     self.years = Object.keys(self.datasetStates);
-    self.currentYear = self.years[0];
+    self.currentYear = self.years[self.years.length - 1];
     self.render();
+  }
+
+  async sicksUpdate() {
+    const self = this;
+    let sicks = {};
+
+    if (self.loadFunction === self.loadMapNation) {
+       sicks = await self.api.request("options");
+    } else {
+       sicks = await self.api.requestState("PB/" + "options");
+    }
+
+    self.sicks = sicks.result;
+    if (!self.currentSick) {
+      self.currentSick = self.sicks[0];
+    }
   }
 
   async loadMapNation() {
     const self = this;
 
-    const result = 
+    const result =
       Object.entries(
         self.datasetStates[self.currentYear]
       ).map(([key, val]) =>
@@ -91,16 +112,40 @@ export default class MapChart {
     const self = this;
     // Querying map country states setting eventListener
     for (const path of self.element.querySelectorAll('#canvas svg path')) {
-      const content = contentData[path.id];
+      const content = contentData ? contentData[path.id] : [];
       const dataset = self.findElement(datasetStates, content);
 
       if (!dataset || !dataset.data[row]) {
         path.style.fill = "#c7c7c7";
         continue;
       }
+      const result = dataset.data[row];
+      const resultColor = getColor(result);
+      const tooltip = self.element.querySelector(".mct-tooltip")
 
-      path.style.fill =
-        getColor(dataset.data[row])
+      path.addEventListener("mousemove", (event) => {
+        tooltip.style.left = event.clientX + 5 + window.scrollX + "px";
+        tooltip.style.top = event.clientY + 10 + window.scrollY + "px";
+      });
+      path.addEventListener("mouseover", (event) => {
+        path.style.transition = "all 0.3s";
+        path.style.fill = "gold";
+        tooltip.innerHTML = `
+          <article>
+            <div class="mct-tooltip__title">${content.name}</div>
+            <div class="mct-tooltip__result">${result + " %"}</div>
+          </article>`;
+        path.style.opacity = "95%";
+        tooltip.style.display = "block";
+        tooltip.style.left = event.clientX + 5 + window.scrollX + "px";
+        tooltip.style.top = event.clientY + 10 + window.scrollY + "px";
+      });
+      path.addEventListener("mouseleave", () => {
+        path.style.fill = resultColor;
+        tooltip.style.display = "none";
+      });
+
+      path.style.fill = resultColor;
     };
 
     if (self.legendTitle) {
@@ -120,13 +165,17 @@ export default class MapChart {
         continue;
       }
 
-      const nameAcronymLowerCase = name.acronym.toLowerCase();
-      const nameNameLowerCase = name.name.toLowerCase();
+      const nameAcronymLowerCase = name.acronym ? name.acronym.toLowerCase() : "";
+      const nameNameLowerCase = name.name ? name.name.toLowerCase() : "";
 
       const labelWithoutSpaces = labelLowerCase.replaceAll(" ", "");
 
-      if (labelLowerCase == nameAcronymLowerCase ||
-        labelWithoutSpaces == nameNameLowerCase.replaceAll(" ", "")) {
+      if (
+        labelLowerCase == nameAcronymLowerCase ||
+        labelWithoutSpaces == nameNameLowerCase.replaceAll(" ", "") ||
+        labelLowerCase == nameNameLowerCase ||
+        labelWithoutSpaces == nameNameLowerCase.replaceAll(" ", "")
+      ) {
         return object;
       }
     }
@@ -136,11 +185,24 @@ export default class MapChart {
 
   async loadMapState () {
     const self = this;
+
+    const result =
+      Object.entries(
+        self.datasetCities[self.currentYear]
+      ).map(([key, val]) =>
+        {
+          return {
+            label: key,
+            data: [val]
+          }
+        }
+      );
+
     await self.applyMap(self.stateMap);
     self.setData({
-      datasetsStates: datasetsMun,
-      contentData: munAcronyms
-    });
+      datasetStates: result,
+      contentData: self.citiesAcronym
+    })
   }
 
   render () {
@@ -165,8 +227,8 @@ export default class MapChart {
         <h1 class="mct__title">${ title }</h1>
         <section class="mct-buttons">
           <div class="mct-buttons__start">
-            <button class="mct-button mct__button--state">Por estado</button>
-            <button class="mct-button mct__button--city">Por município</button>
+            <button class="mct-button mct__button--state" ${ self.loadFunction === self.loadMapNation ? 'disabled' : ''}>Por estado</button>
+            <button class="mct-button mct__button--city" ${ !self.datasetCities || self.loadFunction === self.loadMapState ? 'disabled' : ''}>Por município</button>
           </div>
           <div class="mct-buttons__end">
             <div class="mct-select">
@@ -210,21 +272,28 @@ export default class MapChart {
             <div class="mct-legend-source"></div>
           </div>
         </section>
+        <div class="mct-tooltip"></div>
       `;
 
     self.element.innerHTML = map;
 
     // Listeners
+    if (self.datasetCities) {
+      self.element
+        .querySelector("button.mct__button--city")
+        .addEventListener('click', async () => {
+          self.loadFunction = self.loadMapState;
+          await self.refreshData();
+          await self.loadFunction();
+        });
+    }
+
     self.element
       .querySelector("button.mct__button--state")
       .addEventListener('click', async () => {
-        await self.loadMapNation();
-      });
-
-    self.element
-      .querySelector("button.mct__button--city")
-      .addEventListener('click', async () => {
-        await self.loadMapState();
+        self.loadFunction = self.loadMapNation;
+        await self.refreshData();
+        await self.loadFunction();
       });
 
     self.element
@@ -254,7 +323,7 @@ export default class MapChart {
         self.currentSick = select.options[select.selectedIndex].value;
         self.element.querySelector(".mct__title").innerHTML = `${self.mapTitle} ${self.currentSick}`
         await self.refreshData();
-        await self.loadMapNation();
+        await self.loadFunction();
       });
 
     self.element
@@ -262,7 +331,7 @@ export default class MapChart {
       .addEventListener('change', async (event) => {
         const select = event.target;
         self.currentYear = select.options[select.selectedIndex].value;
-        await self.loadMapNation();
+        await self.loadFunction();
       });
   }
 }
