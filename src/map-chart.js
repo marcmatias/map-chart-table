@@ -1,4 +1,5 @@
 import { getColor } from "./utils.js";
+import { playIcon } from "./icons.js";
 
 export default class MapChart {
 
@@ -21,7 +22,9 @@ export default class MapChart {
     const self = this;
     self.render();
 
-    self.citiesAcronym = await self.api.requestState("PB/citiesAcronym");
+    // TODO: Make possible user update states with select
+    self.currentState = "PB";
+    self.citiesAcronym = await self.api.requestState(`${self.currentState}/citiesAcronym`);
 
     await self.refreshData()
     await self.loadFunction();
@@ -208,7 +211,12 @@ export default class MapChart {
   render () {
     const self = this;
 
-    const years = [] ;
+    const states = [];
+    for (const state of Object.values(this.statesAcronym).map(x => x.acronym)) {
+      states.push(`<option value="${state}" ${ self.currentState == state ? 'selected' : ''}>${state}</option>`);
+    }
+
+    const years = [];
     if(self.years) {
       for (const year of self.years) {
         years.push(`<option value="${year}" ${ self.currentYear == year ? 'selected' : ''}>${year}</option>`);
@@ -222,15 +230,34 @@ export default class MapChart {
       }
     }
 
-    const title = `${self.mapTitle} ${self.currentSick}`;
     const map = `
-        <h1 class="mct__title">${ title }</h1>
+        <h1 class="mct__title">
+          ${self.mapTitle} ${self.currentSick ? self.currentSick : "" }
+        </h1>
         <section class="mct-buttons">
           <div class="mct-buttons__start">
-            <button class="mct-button mct__button--state" ${ self.loadFunction === self.loadMapNation ? 'disabled' : ''}>Por estado</button>
-            <button class="mct-button mct__button--city" ${ !self.datasetCities || self.loadFunction === self.loadMapState ? 'disabled' : ''}>Por município</button>
+            <button
+              class="mct-button mct__button--state"
+              ${ self.loadFunction === self.loadMapNation ? 'disabled' : ''}
+            >
+              Por estado
+            </button>
+            <button
+              class="mct-button mct__button--city"
+              ${ !self.datasetCities || self.loadFunction === self.loadMapState ? 'disabled' : ''}
+            >
+              Por município
+            </button>
           </div>
           <div class="mct-buttons__end">
+            ${ self.loadFunction === self.loadMapState ?
+            `<div class="mct-select">
+              <label class="mct-select__label" for="sick" class="text-xs">Estados</label>
+              <select class="mct-select__element mct-select__states" name="sicks" id="sicks" disabled>
+                ${states.join("")}
+              </select>
+            </div>`
+            : ""}
             <div class="mct-select">
               <label class="mct-select__label" for="sick" class="text-xs">Doença</label>
               <select class="mct-select__element mct-select__sicks" name="sicks" id="sicks">
@@ -245,9 +272,7 @@ export default class MapChart {
             </div>
             <div class="mct-container-button-play">
               <button class="mct-button mct-button--play" title="Clique para executar demonstração de todos os anos">
-                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" class="mct-icon" viewBox="0 0 16 16">
-                  <path d="m11.596 8.697-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"/>
-                </svg>
+                ${playIcon}
               </button>
             </div>
           </div>
