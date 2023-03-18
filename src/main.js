@@ -52,7 +52,7 @@ export default class MapChartTable {
       new MapChart({
         element: this.element.querySelector(".mct__canva-section"),
         api: self.api,
-        statesAcronym: self.statesAcronym,
+        states: self.statesAcronym,
         legendTitle: "Porcentagem de vacinação da população brasileira",
         legendSource: "IBGE 2023."
       });
@@ -258,7 +258,7 @@ export default class MapChartTable {
         new MapChart({
           element: this.element.querySelector(".mct__canva-section"),
           api: self.api,
-          statesAcronym: self.statesAcronym,
+          states: self.statesAcronym,
           legendTitle: "Porcentagem de vacinação da população brasileira",
           legendSource: "IBGE 2023."
         });

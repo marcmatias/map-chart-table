@@ -3,15 +3,17 @@ import { playIcon } from "./icons.js";
 
 export default class MapChart {
 
-  constructor({ element, api, statesAcronym, legendTitle, legendSource }) {
+  constructor({ element, api, states, legendTitle, legendSource }) {
     this.nationMap =
       'https://servicodados.ibge.gov.br/api/v3/malhas/paises/BR?formato=image/svg+xml&qualidade=intermediaria&intrarregiao=UF';
     this.stateMap =
-      'https://servicodados.ibge.gov.br/api/v3/malhas/estados/25?formato=image/svg+xml&qualidade=intermediaria&intrarregiao=municipio';
+      (state) =>
+      `https://servicodados.ibge.gov.br/api/v3/malhas/estados/${state}?formato=image/svg+xml&qualidade=intermediaria&intrarregiao=municipio`;
     this.element = element;
     this.mapTitle = "Cobertura vacinal para";
     this.api = api;
-    this.statesAcronym = statesAcronym;
+    this.states = states;
+    this.statesAcronym = Object.values(states).map(x => x.acronym).sort();
     this.citiesAcronym = {};
     this.legendTitle = legendTitle;
     this.legendSource = legendSource;
@@ -22,9 +24,7 @@ export default class MapChart {
     const self = this;
     self.render();
 
-    // TODO: Make possible user update states with select
-    self.currentState = "PB";
-    self.citiesAcronym = await self.api.requestState(`${self.currentState}/citiesAcronym`);
+    self.currentMap = "BR";
 
     await self.refreshData()
     await self.loadFunction();
@@ -35,15 +35,21 @@ export default class MapChart {
 
     await self.sicksUpdate();
 
+    self.citiesAcronym = await self.api.requestState(`${self.currentMap}/citiesAcronym`);
+
     self.datasetStates =
       await self.api.request(self.currentSick);
 
     self.datasetCities =
-      await self.api.requestState("PB/" + self.currentSick);
+      await self.api.requestState(self.currentMap + "/" + self.currentSick);
 
-
-    self.years = Object.keys(self.datasetStates);
-    self.currentYear = self.years[self.years.length - 1];
+    if (self.datasetStates) {
+      self.years = Object.keys(self.datasetStates);
+      self.currentYear = self.years[self.years.length - 1];
+    } else {
+      self.years = undefined;
+      self.currentYear = undefined;
+    }
     self.render();
   }
 
@@ -54,11 +60,17 @@ export default class MapChart {
     if (self.loadFunction === self.loadMapNation) {
        sicks = await self.api.request("options");
     } else {
-       sicks = await self.api.requestState("PB/" + "options");
+       sicks = await self.api.requestState(self.currentMap + "/" + "options");
     }
 
-    self.sicks = sicks.result;
-    if (!self.currentSick) {
+    self.sicks = sicks?.result;
+
+    if (!self.sicks) {
+      self.currentSick = undefined;
+    } else if (
+      !self.currentSick ||
+      !self.sicks.includes(self.currentSick)
+    ) {
       self.currentSick = self.sicks[0];
     }
   }
@@ -66,22 +78,27 @@ export default class MapChart {
   async loadMapNation() {
     const self = this;
 
-    const result =
-      Object.entries(
-        self.datasetStates[self.currentYear]
-      ).map(([key, val]) =>
-        {
-          return {
-            label: key,
-            data: [val]
+
+    let result = [];
+
+    if (self.datasetStates) {
+      result =
+        Object.entries(
+          self.datasetStates[self.currentYear]
+        ).map(([key, val]) =>
+          {
+            return {
+              label: key,
+              data: [val]
+            }
           }
-        }
-      )
+        );
+    }
 
     await self.applyMap(self.nationMap);
     self.setData({
       datasetStates: result,
-      contentData: self.statesAcronym
+      contentData: self.states
     })
   }
 
@@ -188,20 +205,23 @@ export default class MapChart {
 
   async loadMapState () {
     const self = this;
+    let result = [];
 
-    const result =
-      Object.entries(
-        self.datasetCities[self.currentYear]
-      ).map(([key, val]) =>
-        {
-          return {
-            label: key,
-            data: [val]
+    if (self.datasetCities) {
+      result =
+        Object.entries(
+          self.datasetCities[self.currentYear]
+        ).map(([key, val]) =>
+          {
+            return {
+              label: key,
+              data: [val]
+            }
           }
-        }
-      );
+        );
+    }
 
-    await self.applyMap(self.stateMap);
+    await self.applyMap(self.stateMap(self.currentMap));
     self.setData({
       datasetStates: result,
       contentData: self.citiesAcronym
@@ -211,20 +231,22 @@ export default class MapChart {
   render () {
     const self = this;
 
-    const states = [];
-    for (const state of Object.values(this.statesAcronym).map(x => x.acronym)) {
-      states.push(`<option value="${state}" ${ self.currentState == state ? 'selected' : ''}>${state}</option>`);
+    const maps = [`<option value="BR" ${ self.currentMap === "Brasil" ? 'selected' : ''}>Brasil</option>`];
+    for (const state of this.statesAcronym) {
+      maps.push(`<option value="${state}" ${ self.currentMap == state ? 'selected' : ''}>${state}</option>`);
     }
 
-    const years = [];
+    let years = [`<option>---</option>`];
     if(self.years) {
+      years = [];
       for (const year of self.years) {
         years.push(`<option value="${year}" ${ self.currentYear == year ? 'selected' : ''}>${year}</option>`);
       }
     }
 
-    const sicks = [];
+    let sicks = [`<option>---</option>`];
     if(self.sicks) {
+      sicks = [];
       for (const sick of self.sicks) {
         sicks.push(`<option value="${sick}" ${ self.currentSick === sick ? 'selected' : ''}>${sick}</option>`);
       }
@@ -232,46 +254,47 @@ export default class MapChart {
 
     const map = `
         <h1 class="mct__title">
-          ${self.mapTitle} ${self.currentSick ? self.currentSick : "" }
+          ${self.currentSick ? self.mapTitle + " " + self.currentSick : "---" }
         </h1>
         <section class="mct-buttons">
-          <div class="mct-buttons__start">
-            <button
-              class="mct-button mct__button--state"
-              ${ self.loadFunction === self.loadMapNation ? 'disabled' : ''}
-            >
-              Por estado
-            </button>
-            <button
-              class="mct-button mct__button--city"
-              ${ !self.datasetCities || self.loadFunction === self.loadMapState ? 'disabled' : ''}
-            >
-              Por município
-            </button>
-          </div>
+          <div></div>
           <div class="mct-buttons__end">
-            ${ self.loadFunction === self.loadMapState ?
-            `<div class="mct-select">
-              <label class="mct-select__label" for="sick" class="text-xs">Estados</label>
-              <select class="mct-select__element mct-select__states" name="sicks" id="sicks" disabled>
-                ${states.join("")}
+            <div class="mct-select">
+              <label class="mct-select__label" for="sick" class="text-xs">Mapa</label>
+              <select
+                class="mct-select__element mct-select__maps"
+                name="sicks"
+                id="sicks"
+              >
+                ${maps.join("")}
               </select>
-            </div>`
-            : ""}
+            </div>
             <div class="mct-select">
               <label class="mct-select__label" for="sick" class="text-xs">Doença</label>
-              <select class="mct-select__element mct-select__sicks" name="sicks" id="sicks">
+              <select
+                class="mct-select__element mct-select__sicks"
+                name="sicks" id="sicks"
+                ${self.sicks ? '' : 'disabled'}
+              >
                 ${sicks.join("")}
               </select>
             </div>
             <div class="mct-select">
               <label class="mct-select__label" for="years" class="text-xs">Ano</label>
-              <select class="mct-select__element mct-select__years" name="years" id="years">
+              <select
+                class="mct-select__element mct-select__years"
+                name="years" id="years"
+                ${self.years ? '' : 'disabled'}
+              >
                 ${years.join("")}
               </select>
             </div>
             <div class="mct-container-button-play">
-              <button class="mct-button mct-button--play" title="Clique para executar demonstração de todos os anos">
+              <button
+                class="mct-button mct-button--play"
+                title="Clique para executar demonstração de todos os anos"
+                ${self.years ? '' : 'disabled'}
+              >
                 ${playIcon}
               </button>
             </div>
@@ -303,23 +326,6 @@ export default class MapChart {
     self.element.innerHTML = map;
 
     // Listeners
-    if (self.datasetCities) {
-      self.element
-        .querySelector("button.mct__button--city")
-        .addEventListener('click', async () => {
-          self.loadFunction = self.loadMapState;
-          await self.refreshData();
-          await self.loadFunction();
-        });
-    }
-
-    self.element
-      .querySelector("button.mct__button--state")
-      .addEventListener('click', async () => {
-        self.loadFunction = self.loadMapNation;
-        await self.refreshData();
-        await self.loadFunction();
-      });
 
     self.element
       .querySelector("button.mct-button--play")
@@ -342,11 +348,27 @@ export default class MapChart {
       });
 
     self.element
+      .querySelector("select.mct-select__maps")
+      .addEventListener('change', async (event) => {
+        const select = event.target;
+        const map = select.options[select.selectedIndex].value;
+        self.currentMap = map;
+
+        if (map === "BR") {
+          self.loadFunction = self.loadMapNation;
+        } else {
+          self.loadFunction = self.loadMapState;
+        }
+
+        await self.refreshData();
+        await self.loadFunction();
+      });
+
+    self.element
       .querySelector("select.mct-select__sicks")
       .addEventListener('change', async (event) => {
         const select = event.target;
         self.currentSick = select.options[select.selectedIndex].value;
-        self.element.querySelector(".mct__title").innerHTML = `${self.mapTitle} ${self.currentSick}`
         await self.refreshData();
         await self.loadFunction();
       });
