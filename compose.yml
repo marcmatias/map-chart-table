@@ -10,6 +10,7 @@ services:
    user: "${UID}:${GID}"
    ports:
      - "${HOST_PORT}:${CONTAINER_PORT}"
+     - "${SERVER_HOST_PORT}:${SERVER_CONTAINER_PORT}"
    working_dir: /srv/app
    volumes:
      - type: bind
